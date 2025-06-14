@@ -50,20 +50,49 @@ int fibonacci(int n) {
     }
     return 0; // should never run
 }
-
+// how do we want to index this? by user intuition or by how the array is organized? I,E. do we start at 0 or at 1?
 TEST_CASE("testing the fibonacci function") {
     int actual = fibonacci(4);
     CHECK(actual == 3); 
 }
 
-int towers(int n) {
-    // TODO: finish
-    return 0;
+  // moves n disks from original tower to destination tower using the extra tower.
+  // returns number of moves needed to move n disks
+
+int towersInternal(int n, char original, char destination, char extra){
+    if (n==1){
+        return 1;
+    } else if (n == 0){
+        return 0;
+    }
+   int numOfMovesForNMinusOne = towersInternal (n-1,original, extra, destination); 
+   int numOfMovesForOneDisk = towersInternal (1, original, destination, extra);
+   int numOfMovesForRest = towersInternal (n-1, extra, destination, original);
+   return numOfMovesForNMinusOne + numOfMovesForOneDisk + numOfMovesForRest;
 }
 
-TEST_CASE("testing the towers function") {
-    CHECK(true); // TODO: replace with your tests.
+int towers(int n) {
+    return towersInternal(n,'a','b','c');
 }
+
+
+void timeComplexity() {
+    std::cout << "Hello, World!" << std::endl;
+    for (int i = 0; i < 10; i++) {
+        cout << towers(i);
+    } 
+ }
+
+
+TEST_CASE("testing the towers function") {
+    timeComplexity();
+    CHECK(towers(3) == 7);
+    CHECK(towers(4) == 15);
+    CHECK(towers(10) == 1023);
+}
+
+
+
 
 // Warning: Be sure to free the returned copy.
 int* copyArray(const int arr[], int n) {
