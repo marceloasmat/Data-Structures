@@ -27,6 +27,10 @@ int factorial(int n) {
 TEST_CASE("testing the factorial function") {
     CHECK(factorial(0) == 1);
     CHECK(factorial(3) == 6);
+    CHECK(factorial(5) == 120);
+    CHECK(factorial(10) == 3628800);
+
+
 }
 
 
@@ -52,8 +56,10 @@ int fibonacci(int n) {
 }
 // how do we want to index this? by user intuition or by how the array is organized? I,E. do we start at 0 or at 1?
 TEST_CASE("testing the fibonacci function") {
-    int actual = fibonacci(4);
-    CHECK(actual == 3); 
+    CHECK(fibonacci(0) == 0); 
+    CHECK(fibonacci(1) == 1); 
+    CHECK(fibonacci(4) == 3); 
+    CHECK(fibonacci(10) == 55); 
 }
 
   // moves n disks from original tower to destination tower using the extra tower.
@@ -78,6 +84,7 @@ int towers(int n) {
 
 
 TEST_CASE("testing the towers function") {
+    CHECK(towers(1) == 1);
     CHECK(towers(3) == 7);
     CHECK(towers(4) == 15);
     CHECK(towers(10) == 1023);
