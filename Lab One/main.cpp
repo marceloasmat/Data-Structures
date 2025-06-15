@@ -76,21 +76,14 @@ int towers(int n) {
 }
 
 
-void timeComplexity() {
-    std::cout << "Hello, World!" << std::endl;
-    for (int i = 0; i < 10; i++) {
-        cout << towers(i);
-    } 
- }
-
 
 TEST_CASE("testing the towers function") {
-    timeComplexity();
     CHECK(towers(3) == 7);
     CHECK(towers(4) == 15);
     CHECK(towers(10) == 1023);
+    CHECK(towers(15) == 32767);
+    CHECK(towers(20) == 1048575);
 }
-
 
 
 
@@ -133,9 +126,23 @@ int partition(int pivotIndex, int arr[], int start, int end) {
     //       * You can do this multiple ways; one pass, two passes, from center out, from ends in.
     //       * Use std::swap
 
-    // TODO: finish
+    int i = start - 1;
+    for (int j = start;j <= end;j++){ 
+        int valueAtJ = arr[j];
 
-    return pivotIndex;
+        if (valueAtJ < pivotValue){
+            // do swap
+            i++;
+            std::swap(arr[i], arr[j]);
+
+        }
+        else {
+            //do nothing
+        }
+    }
+    i++;
+    std::swap(arr[i], arr[pivotIndex]);
+    return i;
 }
 
 // Quickly finds the k-th smallest value without sorting the entire array.
@@ -248,3 +255,4 @@ TEST_CASE("test kth smallest value") {
     srand(0);
    // CHECK_NOTHROW(testFindKthSmallestValue(3, 5));
 }
+
