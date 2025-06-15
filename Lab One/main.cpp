@@ -170,19 +170,18 @@ int findKthSmallestValue(int k, int arr[], int start, int end) {
 
     // Base case where s1 == k.
     if (s1 == k) {
-        // TODO: Replace -1 with the value for the base case.
-        return -1;
+        return arr[pivotIndex] ;
     }
 
     // Figure out which segment the kth smallest is in and recurse.
     // Note that the pivot is not included in s1 or s2. This guarantees that the problem reduces while recursing.
     // TODO: Replace true with a boolean expression that determines which segment to recurse into.
-    if (true) {
+    if (s1 < k) {
         // TODO: Replace -1 with a recursive call to findKthSmallestValue.
-        return -1;
+        return findKthSmallestValue (k, arr, pivotIndex + 1, end);
     } else {
         // TODO: Replace -1 with a recursive call to findKthSmallestValue.
-        return -1;
+        return findKthSmallestValue(k, arr, start, pivotIndex - 1);
     }
 }
 
@@ -253,6 +252,6 @@ void testFindKthSmallestValue(int repetitions, int maxArraySize) {
 
 TEST_CASE("test kth smallest value") {
     srand(0);
-   // CHECK_NOTHROW(testFindKthSmallestValue(3, 5));
+   CHECK_NOTHROW(testFindKthSmallestValue(3, 5));
 }
 
