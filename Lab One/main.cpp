@@ -112,7 +112,8 @@ int chooseRandomPivotIndex(int start, int end) {
 int partition(int pivotIndex, int arr[], int start, int end) {
     int n = (end + 1) - start;
     assert(n != 0 && pivotIndex >= start && pivotIndex <= end);
-
+    std::swap(arr[end],arr[pivotIndex]);
+    pivotIndex = end;
     if (n == 1) {
         return pivotIndex;
     }
@@ -178,7 +179,8 @@ int findKthSmallestValue(int k, int arr[], int start, int end) {
     // TODO: Replace true with a boolean expression that determines which segment to recurse into.
     if (s1 < k) {
         // TODO: Replace -1 with a recursive call to findKthSmallestValue.
-        return findKthSmallestValue (k, arr, pivotIndex + 1, end);
+        int newK = k - (s1 + 1);
+        return findKthSmallestValue (newK, arr, pivotIndex + 1, end);
     } else {
         // TODO: Replace -1 with a recursive call to findKthSmallestValue.
         return findKthSmallestValue(k, arr, start, pivotIndex - 1);
