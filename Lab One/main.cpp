@@ -202,6 +202,7 @@ int findKthSmallestValueViaSorting(int k, int arr[], int start, int end) {
     }
 
     if (n == 1) {
+        //this returns the value at index start of arr[start]
         return arr[start];
     }
 
