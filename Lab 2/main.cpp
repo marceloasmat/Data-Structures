@@ -273,7 +273,16 @@ bool isPalindrome(const string & inputString) {
     for (int i = 0; i < inputString.length(); i++){
         paliStack.push(inputString[i]);
     }
-    return false;
+    for( int i = 0; i < inputString.length()/2; i++){
+        char topOfStack = paliStack.peek();
+        if( topOfStack == inputString[i]){
+            // pair matches, keep going
+            paliStack.pop();
+        }else{
+            return false;
+        }
+    }
+    return true;
 }
 
 TEST_CASE("testing palindrome") {
@@ -284,11 +293,21 @@ TEST_CASE("testing palindrome") {
     CHECK(isPalindrome("abba"));
     CHECK(!isPalindrome("ab"));
     CHECK(!isPalindrome("abaa"));
+    CHECK(isPalindrome("aaabaaa"));
 }
 
 string reversedString(const string & inputString) {
-    // TODO
-    return {};
+    ListStack<char> reverseStack;
+    for (int i = 0; i < inputString.length(); i++){
+        reverseStack.push(inputString[i]);
+    }
+    string outputString = "";
+    for (int i = 0; i <inputString.length(); i++){
+        char topOfStack = reverseStack.peek();
+        outputString += topOfStack;
+        reverseStack.pop();  
+    }
+    return {outputString};
 }
 
 TEST_CASE("testing reversed string") {
@@ -318,9 +337,38 @@ bool isOperand(char ch) {
     return isalpha(ch);
 }
 
+
 string infixToPostFix(const string & infix) {
-    // TODO
-    return {};
+    ListStack<char> aStack;
+    string postfixExp = "";
+    for(int i = 0; i<infix.length(); i++){
+        char charAtI = infix[i];
+        bool charIsOperand = isOperand(charAtI); 
+        bool charIsOperator = isOperator(charAtI);
+        if ( charIsOperand){
+            postfixExp += charAtI; 
+        } else if (charAtI == '(') {
+            aStack.push(charAtI);
+        } else if (charIsOperator){
+            while (!aStack.isEmpty() && aStack.peek() != '(' &&
+                precedence(charAtI) <= precedence(aStack.peek())) {
+                    postfixExp += aStack.peek();
+                    aStack.pop();
+            }
+            aStack.push(charAtI);
+        } else if (charAtI == ')'){
+            while (aStack.peek() != '('){
+                postfixExp += aStack.peek();
+                aStack.pop();
+            }
+            aStack.pop();
+        }
+    }
+    while (!aStack.isEmpty()) {
+        postfixExp += aStack.peek();
+        aStack.pop();
+    }
+    return {postfixExp};
 }
 
 TEST_CASE("testing infix to postfix conversions") {
