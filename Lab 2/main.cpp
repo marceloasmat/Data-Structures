@@ -114,23 +114,25 @@ class Node {
 private:
     T value;
     Node* next;
-
+// These constructors are not specific to creating a linked list, its generic. We are using it in this lab to create a linked list, but it could be used in other methods. 
 public:
-    Node(T value) : value(value), next(nullptr) {}
-    Node(T value, Node* next) : value(value), next(next) {}
-
+    Node(T value) : value(value), next(nullptr) {} // this is used for the first object in the linked list (you can also call line 130 if you want the next node to not be nullpointer)
+    Node(T value, Node* next) : value(value), next(next) {} // this is used for all subsequent objects
+    // for line 120 see line 14 in python code shapes.py for reference. 
+      
+    // getter for value of a node
     T getValue() const {
         return value;
     }
-
+    // getter for what a node is pointing to
     Node* getNext() const {
         return next;
     }
-
+    // setter to update what the node is pointing to
     void setNext(Node* n) {
         next = n;
     }
-
+    // setter to update the nodes value
     void setValue(const T & v) {
         value = v;
     }
@@ -139,7 +141,7 @@ public:
 template<typename T>
 class ListStack : public StackADT<T> {
 private: // other classes and programs cant access/use this. Thats what private means
-    Node<T>* top; // last item of my linked list
+    Node<T>* top; // last item of my linked list, the * means the variable is a pointer THIS MEANS TOP IS A POINTER.
 public: //other classes can!
     ListStack() : top(nullptr) {}
     ~ListStack() {
@@ -148,12 +150,32 @@ public: //other classes can!
 
     // Copy constructor
     ListStack(const ListStack & other) {
-        // TODO
+        top = nullptr;
+        if (other.top) {
+            this->top = new Node<T>(other.top->getValue()); // this represents self. in python
+            Node<T>* currentThis = top;
+            Node<T>* currentOther = other.top->getNext();
+
+            while (currentOther != nullptr) {
+                currentThis->setNext(new Node<T>(currentOther->getValue()));
+                currentThis = currentThis->getNext();
+                currentOther = currentOther->getNext();
+            }
+
+            
+        }
+        
     }
+
+ /*   void addValues(const int x){
+        x = 20;
+    }   this is just an example of how const works to prevent changing the passed value*/
 
     // Move constructor, Hint: Don't forget to make a other a "hollow" data structure.
     ListStack(ListStack && other) noexcept {
-         // TODO
+        top = other.top;
+        other.top = nullptr;
+         
     }
 
     bool isEmpty() const override {
@@ -163,28 +185,29 @@ public: //other classes can!
             return false;
         }   
     }
-
+// TOP IS A POINTER NOT A VARIABLE OF THE NODE. TOP IS THE TOP POINTER
     bool push(const T & value) override {
-        // TODO
-        return false;
+        Node<T>* topNode = new Node<T>(value ,top);
+        top = topNode;
+        return true;
     }
-
+// creates a variable for the front of the linked list and returns that value.
     T peek() const override {
         if(isEmpty()) {
             throw std::logic_error("Peek on empty ArrayStack.");
         }
-
-        // TODO
-        return {};
+        T topValue = top->getValue(); // this is an extra step, i could just return top.getValue()
+        return {topValue};
     }
 
     bool pop() override {
         if(isEmpty()) {
             return false;
         }
-
-        // TODO
-        return false;
+        Node<T>* newTop = top->getNext();
+        top->setNext(nullptr); 
+        top = newTop;
+        return true;
     }
 };
 
@@ -219,8 +242,19 @@ TEST_CASE("testing the linked chain implementation of stack") {
 }
 
 bool areCurleyBracesMatched(const string & inputString) {
-    // TODO
-    return false;
+    ListStack<string> fakeStack;
+    for (int i=0; i < inputString.length(); i++){
+        char letterAtI = inputString[i];
+        if (letterAtI == '{') {
+            fakeStack.push("{");
+        } else if (letterAtI == '}'){
+            bool popResult = fakeStack.pop();
+            if (popResult == false){
+                return false;
+            }   
+        }
+    }
+    return fakeStack.isEmpty();
 }
 
 TEST_CASE("testing matched curly braces") {
@@ -232,8 +266,13 @@ TEST_CASE("testing matched curly braces") {
     CHECK(!areCurleyBracesMatched("a{b{c}"));
 };
 
+
+
 bool isPalindrome(const string & inputString) {
-    // TODO
+    ListStack<char> paliStack;
+    for (int i = 0; i < inputString.length(); i++){
+        paliStack.push(inputString[i]);
+    }
     return false;
 }
 
