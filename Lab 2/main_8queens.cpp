@@ -1,3 +1,4 @@
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -37,43 +38,38 @@ bool isSafe(const std::vector<std::string>& board, int row, int col, int N) {
 }
 
 // Recursive function to solve the N-Queens problem using backtracking
-void solveNQueens(std::vector<std::string>& board, int col, int N, int& solutionCount) {
+bool solveEightQueens(std::vector<std::string>& board, int col, int numberOfQueens) {
     // Base case: If all queens are placed, then a solution is found
-    if (col >= N) {
-        solutionCount++;
-        std::cout << "Solution " << solutionCount << ":" << std::endl;
+    if (col >= numberOfQueens) {
         printBoard(board);
-        return;
+        return true;
     }
 
     // Consider this column and try placing this queen in all rows one by one
-    for (int i = 0; i < N; ++i) {
-        if (isSafe(board, i, col, N)) {
+    for (int i = 0; i < numberOfQueens; ++i) {
+        if (isSafe(board, i, col, numberOfQueens)) {
             // Place queen
             board[i][col] = 'Q';
 
             // Recur to place the rest of the queens
-            solveNQueens(board, col + 1, N, solutionCount);
-
-            // Backtrack: Remove queen from board[i][col]
-            board[i][col] = '.';
+            bool foundSolution = solveEightQueens(board, col + 1, numberOfQueens);
+            if(foundSolution){
+                return true;
+            } else {
+                // Backtrack: Remove queen from board[i][col]
+                board[i][col] = '-';
+            }
+           
         }
     }
 }
 
 int main() {
-    const int N = 8; // For the 8 Queens problem
-    std::vector<std::string> board(N, std::string(N, '.')); // Initialize empty board
-    int solutionCount = 0;
+    const int numberOfQueens = 8; // For the 8 Queens problem
+    std::vector<std::string> board(numberOfQueens, std::string(numberOfQueens, '-')); // Initialize empty board
 
-    std::cout << "Solving the " << N << " Queens Problem..." << std::endl;
-    solveNQueens(board, 0, N, solutionCount);
-
-    if (solutionCount == 0) {
-        std::cout << "No solutions found for " << N << " Queens." << std::endl;
-    } else {
-        std::cout << "Total solutions found for " << N << " Queens: " << solutionCount << std::endl;
-    }
+    std::cout << "Solving the " << numberOfQueens << " Queens Problem..." << std::endl;
+    solveEightQueens(board, 0, numberOfQueens);
 
     return 0;
 }
