@@ -124,7 +124,7 @@ void testListADT(ListADT<T>& list) {
     CHECK(list.insert(2, 24));
     list.clear();
     CHECK(list.getLength() == 0);
-    CHECK(false);
+// used this to just keep my place in code.    CHECK(false);
 }
 
 TEST_CASE("testing array implementation of list adt") {
@@ -281,7 +281,16 @@ TEST_CASE("test linked chain implementation of list adt") {
 
 template<typename ItemType>
 void insertionSort(ListADT<ItemType> & list) {
-    // TODO
+    for (int i = 2; i<=list.getLength(); i++){ // for loop starts at 2 because the first item in the array is already "sorted"
+        ItemType tempVariable = list.getEntry(i);
+        int j = 1; 
+        while (tempVariable > list.getEntry(j)){
+            j++;
+        }
+        list.remove(i);
+        list.insert(j, tempVariable);
+    }
+
 }
 
 void fillRandom(ListADT<int> & list, int n) {
