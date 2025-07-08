@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
+#include <memory>
 
 // https://github.com/doctest/doctest/blob/master/doc/markdown/tutorial.md
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
@@ -137,24 +138,31 @@ template<typename T>
 class Node {
 private:
     T value;
-    Node *next;
+    std::shared_ptr<Node<T>> next;
+    //Node *next;
 
 public:
     Node(T value) : value(value), next(nullptr) {}
 
-    Node(T value, Node *next) : value(value), next(next) {}
+    Node(T value, std::shared_ptr<Node<T>> next) : value(value), next(next) {}
 
     T getItem() const {
         return value;
     }
 
-    Node *getNext() const {
+    auto getNext() const {
         return next;
     }
+   /* Node *getNext() const {
+        return next;
+    } */
 
-    void setNext(Node *n) {
+    void setNext (std::shared_ptr<Node<T>> nextNodeptr){
+        next = nextNodeptr;
+    }    
+   /* void setNext(Node *n) {
         next = n;
-    }
+    } */
 
     void setItem(const T &v) {
         value = v;
@@ -165,19 +173,19 @@ template<class ItemType>
 class LinkedList : public ListADT<ItemType> {
 private :
     // Pointer to first node in the chain (contains the first entry in the list)
-    Node<ItemType> *headPtr;
+    std::shared_ptr<Node<ItemType>> headPtr; // converted to a shared pointer
 
     // Current count of list items
     int itemCount;
 
-    Node<ItemType> *getNodeAt(int position) const {
+    std::shared_ptr<Node<ItemType>> getNodeAt(int position) const {
         // Debugging check of precondition
         if (position < 1 || position > itemCount) {
             throw std::out_of_range("Position out of range.");
         }
 
         // Count from the beginning of the chain
-        Node<ItemType> *curPtr = headPtr;
+        std::shared_ptr<Node<ItemType>> curPtr = headPtr;
         for (int skip = 1; skip < position; skip++)
             curPtr = curPtr->getNext();
         return curPtr;
@@ -203,7 +211,7 @@ public :
                             (newPosition <= itemCount + 1);
         if (ableToInsert) {
             // Create a new node containing the new entry
-            Node<ItemType> *newNodePtr = new Node<ItemType>(newEntry);
+            std::shared_ptr<Node<ItemType>> newNodePtr = std::make_shared<Node<ItemType>>(newEntry);
             // Attach new node to chain
             if (newPosition == 1) {
                 // Insert new node at beginning of chain
@@ -211,7 +219,7 @@ public :
                 headPtr = newNodePtr;
             } else {
                 // Find node that will be before new node
-                Node<ItemType> *prevPtr = getNodeAt(newPosition - 1);
+                std::shared_ptr<Node<ItemType>> prevPtr = getNodeAt(newPosition - 1);
                 // Insert new node after node to which prevPtr points
                 newNodePtr->setNext(prevPtr->getNext());
                 prevPtr->setNext(newNodePtr);
@@ -224,14 +232,14 @@ public :
     bool remove(int position) {
         bool ableToRemove = (position >= 1) && (position <= itemCount);
         if (ableToRemove) {
-            Node<ItemType> *curPtr = nullptr;
+            std::shared_ptr<Node<ItemType>> curPtr = nullptr;
             if (position == 1) {
                 // Remove the first node in the chain
                 curPtr = headPtr; // Save pointer to node
                 headPtr = headPtr->getNext();
             } else {
                 // Find node that is before the one to delete
-                Node<ItemType> *prevPtr = getNodeAt(position - 1);
+                std::shared_ptr<Node<ItemType>> prevPtr = getNodeAt(position - 1);
                 // Point to node to delete
                 curPtr = prevPtr->getNext();
                 // Disconnect indicated node from chain by connecting the
@@ -239,9 +247,9 @@ public :
                 prevPtr->setNext(curPtr->getNext());
             } // end if
             // Return node to system
-            curPtr->setNext(nullptr);
-            delete curPtr;
-            curPtr = nullptr;
+            //curPtr->setNext(nullptr);
+            //delete curPtr;
+            //curPtr = nullptr;
             itemCount--; // Decrease count of entries
         } // end if
         return ableToRemove;
@@ -256,7 +264,7 @@ public :
         // Enforce precondition
         bool ableToGet = (position >= 1) && (position <= itemCount);
         if (ableToGet) {
-            Node<ItemType> *nodePtr = getNodeAt(position);
+            std::shared_ptr<Node<ItemType>> nodePtr = getNodeAt(position);
             return nodePtr->getItem();
         } else {
             string message = "getEntry() called with an empty list or ";
@@ -266,7 +274,7 @@ public :
     }
 
     void replace(int position, const ItemType &newEntry) {
-        Node<ItemType> *n = getNodeAt(position);
+        std::shared_ptr<Node<ItemType>> n = getNodeAt(position);
         n->setItem(newEntry);
     }
 }; // end LinkedList
