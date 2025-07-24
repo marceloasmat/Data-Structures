@@ -9,6 +9,7 @@
 #include <queue>
 #include <cassert>
 #include <algorithm>
+#include <optional>
 
 using namespace std;
 
@@ -57,7 +58,7 @@ Time get_event_time(const Event& e) {
 struct CompareEvent {
     bool operator()(const Event & e1, const Event & e2) {
         // TODO: Create a min heap by replacing true with a boolean expression. Hint: Consult std::priority_queue.
-        return true;
+        return get_event_time(e1) > get_event_time(e2);
     }
 };
 
@@ -87,13 +88,22 @@ public:
     }
 
     void stopWork(Time currentTime) {
-        Time elapsedTime = currentTime - startBusy.value();
-        elapsedTimeBusy += elapsedTime;
-        startBusy = nullopt;
+        // Only calculate and accumulate if the teller was actually busy
+        if (startBusy.has_value()) {
+            Time elapsedTime = currentTime - startBusy.value();
+            elapsedTimeBusy += elapsedTime;
+            startBusy = nullopt; // Teller is now available
+        }
     }
 
     // Returns the final elapsed time a teller has been working after the simulation is finished.
     Time elapsedTimeWorking() {
+        // If the simulation ends while the teller is still busy,
+        // we should account for the time they were busy until the end of the simulation.
+        // However, for this simulation, all events lead to a stop or next customer,
+        // so `stopWork` should have been called for all busy periods.
+        // If the simulation logic ensures all busy periods conclude with a departure event,
+        // this method should return the final accumulated value.
         return elapsedTimeBusy;
     }
 };
@@ -103,6 +113,9 @@ struct SimulationResults {
 
     // Finds the max teller time and is perhaps proportional to the customer wait time.
     Time maxTellerBusyTime() {
+        if (elapsedTimeBusy.empty()) {
+            return 0;
+        }
         return *max_element(elapsedTimeBusy.begin(), elapsedTimeBusy.end());
     }
 
@@ -157,6 +170,9 @@ private:
         }
 
         // TODO: Load all the input data from simulationInput into the event priority queue.
+        for (const auto& arrival : simulationInput){
+            eventQueue.push(arrival);
+        }
     }
 
     // Sets up the simulation for the given number of tellers.
@@ -204,11 +220,20 @@ private:
     // place customer at the end of the bank line. Otherwise, we weren't
     // busy so start teller work and add a new departure event to the event queue.
     void processArrival(Time currentTime, const ArrivalEvent& arrivalEvent) {
-        auto teller = searchAvailableTellers();
+        auto teller_index_opt = searchAvailableTellers();
 
-        bool is_teller_available = teller.has_value();
+        bool is_teller_available = teller_index_opt.has_value();
 
         // TODO: Process an arrival event. Don't forget to set a teller to busy if they aren't.
+        if (is_teller_available) {
+            TellerIndex tellerIndex = teller_index_opt.value();
+            tellers[tellerIndex].startWork(currentTime);
+
+            Time departureTime = currentTime + arrivalEvent.transactionTime;
+            eventQueue.push(DepartureEvent{departureTime, tellerIndex});
+        } else {
+            bankLine.push(Customer{arrivalEvent});
+        }
     }
 
     // Process departure events.
@@ -219,7 +244,26 @@ private:
     void processDeparture(Time currentTime, const DepartureEvent& departureEvent) {
         size_t tellerIndex = departureEvent.tellerIndex;
 
+        // First, mark the *current* transaction as complete and accumulate its busy time.
+        // This is crucial to correctly account for the time spent on the just-finished customer.
+        tellers[tellerIndex].stopWork(currentTime); // This calls stopWork to record time for completed customer
+
         // TODO: Process a departure event. Don't forget to set a teller to not-working if they are.
+        if (bankLine.empty()) {
+            // This is a NO-OP
+         
+        } else {
+         
+            Customer nextCustomer = bankLine.front();
+            bankLine.pop();
+
+            // Teller starts working on new customer
+            tellers[tellerIndex].startWork(currentTime); 
+
+           
+            Time newDepartureTime = currentTime + nextCustomer.arrivalEvent.transactionTime;
+            eventQueue.push(DepartureEvent{newDepartureTime, tellerIndex});
+        }
     }
 
     // Runs the simulation.
@@ -237,7 +281,7 @@ private:
         // Transform is like map in more functional languages. It takes an input vector and fills
         // a new vector with the results of the given lambda function passed as a parameter.
         vector<Time> elapsedTimeBusy(tellers.size());
-        transform(tellers.begin(), tellers.end(), elapsedTimeBusy.begin(), [](auto teller) {
+        transform(tellers.begin(), tellers.end(), elapsedTimeBusy.begin(), [](auto& teller) {
             return teller.elapsedTimeWorking();
         });
 
