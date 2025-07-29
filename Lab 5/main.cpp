@@ -41,6 +41,9 @@ public:
 
     bool isLeaf() const {
         // TODO: A leaf node has no children (both left and right pointers are null)
+        if (leftChildPtr == nullptr && rightChildPtr == nullptr) {
+            return true;
+        }
         return false;
     }
 
@@ -69,7 +72,16 @@ int heightAtTree(std::shared_ptr<BinaryNode<ItemType>> subTreePtr)
     // TODO: Height is the number of edges on the longest path from root to leaf
     // Base case: empty tree has height -1, single node has height 0
     // Recursive case: height = 1 + max(left_height, right_height)
-    return -1;
+    if (subTreePtr == nullptr){
+        return -1 ;
+    }
+
+    if ( subTreePtr->isLeaf()){
+        return 0;
+    }
+    int leftTreeHeight = heightAtTree(subTreePtr->getLeftChildPtr());
+    int rightTreeHeight = heightAtTree(subTreePtr->getRightChildPtr());
+    return 1 + std::max(leftTreeHeight, rightTreeHeight) ;
 }  // end getHeightHelper
 
 template<class ItemType>
