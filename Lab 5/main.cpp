@@ -103,11 +103,15 @@ std::shared_ptr<BinaryNode<ItemType>> findNodeInTree(std::shared_ptr<BinaryNode<
     if (treePtr->getItem() == target) {
         return treePtr;
     }
-
+    std::shared_ptr<BinaryNode<ItemType>> resultFromLeftSubtree = findNodeInTree(treePtr->getLeftChildPtr(), target);
+    if (resultFromLeftSubtree != nullptr){
+        return resultFromLeftSubtree;
+    }
+    std::shared_ptr<BinaryNode<ItemType>> resultFromRightSubtree = findNodeInTree(treePtr->getRightChildPtr(), target);
     // TODO: Search both left and right subtrees recursively
     // If found in left subtree, return that result
     // Otherwise, return result from right subtree search
-    return {};
+    return resultFromRightSubtree;
 }
 
 template<class ItemType>
