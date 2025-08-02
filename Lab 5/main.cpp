@@ -176,7 +176,19 @@ std::shared_ptr<BinaryNode<ItemType>> copyTree(const std::shared_ptr<BinaryNode<
     //   3. Recursively copy right subtree and attach to new node
     //   4. Return the new node
 
-    return {};
+    if (oldTreeRootPtr == nullptr){
+        return nullptr;
+    }
+
+    newTreePtr = std::make_shared<BinaryNode<ItemType>>(oldTreeRootPtr->getItem
+    ());
+
+    newTreePtr->setLeftChildPtr(copyTree(oldTreeRootPtr->getLeftChildPtr()));
+
+    newTreePtr->setRightChildPtr(copyTree(oldTreeRootPtr->getRightChildPtr()));
+
+    return newTreePtr;
+
 }  // end copyTree
 
 // *************************** BinaryNodeTree ******************************
@@ -262,7 +274,18 @@ private:
         // 2. If left height <= right height, recursively add to left subtree
         // 3. Otherwise, recursively add to right subtree
         // 4. Update the appropriate child pointer and return current node
-        return {};
+
+        int lSubTreeHeight = heightAtTree(subTreePtr->getLeftChildPtr());
+        int rSubTreeHeight = heightAtTree(subTreePtr->getRightChildPtr());
+
+        if (lSubTreeHeight < rSubTreeHeight){
+            auto tmpPtr = balancedAdd(subTreePtr->getLeftChildPtr(), newNodePtr);
+            subTreePtr->setLeftChildPtr(tmpPtr);
+        } else{
+            auto tmpPtr = balancedAdd(subTreePtr->getRightChildPtr(), newNodePtr); // this also covers if they are equal
+            subTreePtr->setRightChildPtr(tmpPtr);
+        }
+        return subTreePtr;
     }  // end balancedAdd
 
 public:
@@ -345,7 +368,46 @@ public:
         // 3. Replace target node's data with deepest node's data
         // 4. Delete the deepest node
         // Alternative: Create a helper function that returns new root after removal
-        return removed;
+        std::shared_ptr<BinaryNode<ItemType>> nodeToRemove = findNodeInTree(rootPtr, target);
+        if (nodeToRemove == nullptr){
+            return false;
+        }
+        std::shared_ptr<BinaryNode<ItemType>> rightMostNode = findRightMostNode(rootPtr);
+
+        if (nodeToRemove == rightMostNode){
+            rootPtr = removeNodeAt(rootPtr, rightMostNode->getItem());
+            return true;
+        }
+        nodeToRemove->setItem(rightMostNode->getItem());
+        rootPtr = removeNodeAt(rootPtr, rightMostNode->getItem());
+        return true;
+    }
+
+    std::shared_ptr<BinaryNode<ItemType>> findRightMostNode(std::shared_ptr<BinaryNode<ItemType>> node ){
+        if(node == nullptr){
+            return nullptr;
+        }
+        if(node->getRightChildPtr() == nullptr){
+            return node;
+        }
+        return findRightMostNode(node->getRightChildPtr());
+        
+    }
+
+    std::shared_ptr<BinaryNode<ItemType>> removeNodeAt(std::shared_ptr<BinaryNode<ItemType>> subTreePtr, const ItemType& target) {
+        if (subTreePtr == nullptr) {
+            return nullptr;
+        }
+
+        if (subTreePtr->getItem() == target) {
+            // This node is the one to be removed. Since we swap with a leaf, it effectively becomes a leaf.
+            return nullptr;
+        }
+
+        subTreePtr->setLeftChildPtr(removeNodeAt(subTreePtr->getLeftChildPtr(), target));
+        subTreePtr->setRightChildPtr(removeNodeAt(subTreePtr->getRightChildPtr(), target));
+
+        return subTreePtr;
     }
 
     void clear() override {
@@ -499,6 +561,18 @@ private:
         //         -> Find inorder successor (use findInOrderSuccessor helper)
         //         -> Replace node's data with successor's data
         //         -> Recursively remove successor from right subtree (using cases 1 & 2)
+
+        if(node->isLeaf()){
+            return nullptr;
+        }
+
+        if(node->getLeftChildPtr() == nullptr && node->getRightChildPtr() != nullptr){
+            return node->getRightChildPtr();
+        }
+
+        if(node->getLeftChildPtr() != nullptr && node->getRightChildPtr() == nullptr){
+            return node->getLeftChildPtr();
+        }
         return {};
     } // end removeNode
 
