@@ -573,7 +573,12 @@ private:
         if(node->getLeftChildPtr() != nullptr && node->getRightChildPtr() == nullptr){
             return node->getLeftChildPtr();
         }
-        return {};
+
+        std::shared_ptr<BinaryNode<ItemType>> successor = findInOrderSuccessor(node);
+        node->setItem(successor->getItem());
+        bool isSuccess;
+        node->setRightChildPtr(removeValue(node->getRightChildPtr(), successor->getItem(), isSuccess));
+        return node;
     } // end removeNode
 
 public:
@@ -653,8 +658,18 @@ public:
     bool contains(const ItemType &target) const override {
 
         // TODO: Replace this find with one for the BST that performs the binary search algorithm to
-        //       find the node in O(log n) time instead of O(n) as is done int the BNT.
-        return findNodeInTree(rootPtr, target) != nullptr;
+        // find the node in O(log n) time instead of O(n) as is done int the BNT.
+        std::shared_ptr<BinaryNode<ItemType>> current = rootPtr;
+        while (current != nullptr) {
+            if (current->getItem() == target) {
+                return true;
+            } else if (current->getItem() > target) {
+                current = current->getLeftChildPtr();
+            } else {
+                current = current->getRightChildPtr();
+            }
+        }
+        return false;
     }
 
     void preorderTraverse(std::function<void(ItemType &)> visit) const override {
@@ -680,6 +695,15 @@ void treeSort(ItemType array_in[], int array_size) {
     // TODO:
     // Step 1: Add all array elements to BST
     // Step 2: Use inorder traversal with lambda to extract sorted values back to array
+
+    for( int i = 0; i < array_size; i++){     
+        bst.add(array_in[i]);
+    }
+
+    int visitInSortedOrderIndex =0;
+    bst.inorderTraverse([&array_in, &visitInSortedOrderIndex](ItemType& value) {
+        array_in[visitInSortedOrderIndex++] = value;
+    });
 }
 
 // *************************** Unit Tests ******************************
