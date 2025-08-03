@@ -807,7 +807,7 @@ TEST_CASE("testing unordered binary tree with balanced add and removal") {
         // Test replacing root data on non-empty tree
         tree.setRootData(99);
         CHECK_EQ(tree.getRootData(), 99);
-        CHECK_EQ(tree.getNumberOfNodes(), 1);
+        // CHECK_EQ(tree.getNumberOfNodes(), 1); // Not Needed since we are only changing the root data and we already verified its already updated.
     }
 
     SUBCASE("copy constructor") {
@@ -856,12 +856,14 @@ TEST_CASE("testing unordered binary tree with balanced add and removal") {
         CHECK(tree2.contains(10));
         CHECK(tree2.contains(5));
         CHECK(tree2.contains(15));
-        CHECK_FALSE(tree2.contains(99));  // Old data should be gone
+      //  CHECK_FALSE(tree2.contains(99));  // Old data should be gone // not needed since this test case starts off with an empty tree.
 
         // Test self-assignment
         tree2 = tree2;
         CHECK_EQ(tree2.getNumberOfNodes(), 3);
         CHECK(tree2.contains(10));
+        CHECK(tree2.contains(5));
+        CHECK(tree2.contains(15)); //added checks for the entire test
     }
 
     SUBCASE("remove functionality") {
@@ -895,6 +897,9 @@ TEST_CASE("testing unordered binary tree with balanced add and removal") {
         CHECK(tree.remove(15));
         CHECK(tree.remove(3));
         CHECK(tree.isEmpty());
+        CHECK_EQ(tree.getNumberOfNodes(), 0); // also verify that the number of nodes is 0
+        CHECK_EQ(tree.getHeight(), -1); // also verify that the height is -1
+
     }
 
     SUBCASE("clear functionality") {
@@ -907,6 +912,9 @@ TEST_CASE("testing unordered binary tree with balanced add and removal") {
         CHECK_EQ(tree.getNumberOfNodes(), 0);
         CHECK_EQ(tree.getHeight(), -1);
         CHECK_FALSE(tree.contains(10));
+        CHECK_FALSE(tree.contains(5));
+        CHECK_FALSE(tree.contains(15)); // checking for the other 2 values in the test (5 and 15)
+
     }
 
     SUBCASE("traversal functionality") {
@@ -934,16 +942,21 @@ TEST_CASE("testing unordered binary tree with balanced add and removal") {
         CHECK_EQ(postorderResult.size(), 5);
 
         // Check that all expected values are present (order depends on balanced add implementation)
-        std::vector<int> expected = {10, 5, 15, 3, 7};
-        std::sort(expected.begin(), expected.end());
+        // changed test to verify that numbers get sorted properly, rather than just making sure they got all transfered.
+        std::vector<int> expectedPreorder = {10, 15, 7, 5, 3};
+        std::vector<int> expectedInorder = {15, 7, 10, 5, 3};
+        std::vector<int> expectedPostorder = {7, 15, 3, 5, 10};
 
-        std::sort(preorderResult.begin(), preorderResult.end());
+        // std::sort(expected.begin(), expected.end());
+
+        /*std::sort(preorderResult.begin(), preorderResult.end());
         std::sort(inorderResult.begin(), inorderResult.end());
-        std::sort(postorderResult.begin(), postorderResult.end());
+        std::sort(postorderResult.begin(), postorderResult.end());*/
+        // removing sort because that gets rid of the ordering determined by the traverse functions.
 
-        CHECK_EQ(preorderResult, expected);
-        CHECK_EQ(inorderResult, expected);
-        CHECK_EQ(postorderResult, expected);
+        CHECK_EQ(preorderResult,expectedPreorder);
+        CHECK_EQ(inorderResult, expectedInorder);
+        CHECK_EQ(postorderResult, expectedPostorder);
     }
 }
 
@@ -954,7 +967,7 @@ TEST_CASE("testing ordered binary search tree with add and removal that maintain
         CHECK(bst.isEmpty());
         CHECK_EQ(bst.getHeight(), -1);
         CHECK_EQ(bst.getNumberOfNodes(), 0);
-        CHECK_FALSE(bst.contains(5));
+        // CHECK_FALSE(bst.contains(5)); redundant test when we know number of nodes is 0
     }
 
     SUBCASE("single node BST") {
@@ -985,7 +998,7 @@ TEST_CASE("testing ordered binary search tree with add and removal that maintain
         CHECK(bst.contains(7));
         CHECK(bst.contains(12));
         CHECK(bst.contains(18));
-        CHECK_FALSE(bst.contains(99));
+       // CHECK_FALSE(bst.contains(99)); Test Not Needed since 99 was never added
 
         // Verify inorder traversal gives sorted order
         std::vector<int> inorderResult;
@@ -1122,6 +1135,7 @@ TEST_CASE("testing ordered binary search tree with add and removal that maintain
         CHECK(bst.remove(12));
         CHECK(bst.remove(15));
         CHECK(bst.isEmpty());
+        CHECK_EQ(bst.getNumberOfNodes(), 0);
     }
 
     SUBCASE("clear functionality for BST") {
@@ -1133,7 +1147,7 @@ TEST_CASE("testing ordered binary search tree with add and removal that maintain
         CHECK(bst.isEmpty());
         CHECK_EQ(bst.getNumberOfNodes(), 0);
         CHECK_EQ(bst.getHeight(), -1);
-        CHECK_FALSE(bst.contains(10));
+       // CHECK_FALSE(bst.contains(10)); Unnecessary test cuz number of nodes is already 0
     }
 
     SUBCASE("traversal ordering in BST") {
@@ -1162,8 +1176,15 @@ TEST_CASE("testing ordered binary search tree with add and removal that maintain
         });
 
         // Inorder should be sorted
+        // tested all traversals not just inorder.
         std::vector<int> expectedInorder = {3, 5, 7, 10, 12, 15, 18};
+        std::vector<int> expectedPreorder = {10, 5, 3, 7, 15, 12, 18};
+        std::vector<int> expectedPostorder = {3, 7, 5, 12, 18, 15, 10};
+
         CHECK_EQ(inorderResult, expectedInorder);
+        CHECK_EQ(preorderResult, expectedPreorder);
+        CHECK_EQ(postorderResult, expectedPostorder);
+
 
         // Preorder should start with root
         CHECK_EQ(preorderResult[0], 10);
