@@ -7,6 +7,7 @@
 #include <cassert>
 #include <algorithm>
 #include <functional>
+#include <queue>
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
@@ -180,8 +181,7 @@ std::shared_ptr<BinaryNode<ItemType>> copyTree(const std::shared_ptr<BinaryNode<
         return nullptr;
     }
 
-    newTreePtr = std::make_shared<BinaryNode<ItemType>>(oldTreeRootPtr->getItem
-    ());
+    newTreePtr = std::make_shared<BinaryNode<ItemType>>(oldTreeRootPtr->getItem());
 
     newTreePtr->setLeftChildPtr(copyTree(oldTreeRootPtr->getLeftChildPtr()));
 
@@ -360,40 +360,92 @@ public:
     //
     // Removes the target value from the BinaryNodeTree. Note this is for the regular, non-binary search tree.
     bool remove(const ItemType& target) override {
-        bool removed = false;
-        // TODO: This is for unordered binary tree removal (not BST!)
-        // Suggested approach from GeeksForGeeks reference:
-        // 1. Find the node to remove
-        // 2. Find the deepest rightmost node (last node in level order)
-        // 3. Replace target node's data with deepest node's data
-        // 4. Delete the deepest node
-        // Alternative: Create a helper function that returns new root after removal
         std::shared_ptr<BinaryNode<ItemType>> nodeToRemove = findNodeInTree(rootPtr, target);
-        if (nodeToRemove == nullptr){
-            return false;
+        if (nodeToRemove == nullptr) {
+            return false; // Target not found
         }
-        std::shared_ptr<BinaryNode<ItemType>> rightMostNode = findRightMostNode(rootPtr);
 
-        if (nodeToRemove == rightMostNode){
-            rootPtr = removeNodeAt(rootPtr, rightMostNode->getItem());
+        // Special case: removing the only node (root is a leaf)
+        if (rootPtr->isLeaf() && rootPtr->getItem() == target) {
+            rootPtr = nullptr;
             return true;
         }
-        nodeToRemove->setItem(rightMostNode->getItem());
-        rootPtr = removeNodeAt(rootPtr, rightMostNode->getItem());
+
+        // Find the deepest rightmost node and its parent
+        auto deepestResult = findRightMostNode(rootPtr);
+        std::shared_ptr<BinaryNode<ItemType>> deepestNode = deepestResult.first;
+        std::shared_ptr<BinaryNode<ItemType>> parentOfDeepestNode = deepestResult.second;
+
+        // If the node to remove is the deepest rightmost node itself
+        if (nodeToRemove == deepestNode) {
+            if (parentOfDeepestNode != nullptr) {
+                // Remove deepestNode by promoting its left child (deepest rightmost can only have a left child)
+                if (parentOfDeepestNode->getLeftChildPtr() == deepestNode) {
+                    parentOfDeepestNode->setLeftChildPtr(deepestNode->getLeftChildPtr());
+                } else { // Must be right child
+                    parentOfDeepestNode->setRightChildPtr(deepestNode->getLeftChildPtr());
+                }
+            } else { // deepestNode is the root (and must be the only node, as handled by the initial leaf check)
+                     // If it somehow reached here and is root, but has children, promote its left child
+                rootPtr = deepestNode->getLeftChildPtr(); // If it's root and deepest, it can only have a left child
+            }
+            return true;
+        }
+
+        // Swap data: Copy data from deepestNode to nodeToRemove
+        nodeToRemove->setItem(deepestNode->getItem());
+
+        // Now, remove the deepestNode from its original position
+        if (parentOfDeepestNode != nullptr) {
+            // Remove deepestNode by promoting its left child (deepest rightmost can only have a left child)
+            if (parentOfDeepestNode->getLeftChildPtr() == deepestNode) {
+                parentOfDeepestNode->setLeftChildPtr(deepestNode->getLeftChildPtr());
+            } else { // Must be right child
+                parentOfDeepestNode->setRightChildPtr(deepestNode->getLeftChildPtr());
+            }
+        } else { // deepestNode is the root (and its data was swapped to nodeToRemove)
+                 // The new root becomes deepestNode's left child
+            rootPtr = deepestNode->getLeftChildPtr();
+        }
+
         return true;
     }
 
-    std::shared_ptr<BinaryNode<ItemType>> findRightMostNode(std::shared_ptr<BinaryNode<ItemType>> node ){
-        if(node == nullptr){
-            return nullptr;
+    std::pair<std::shared_ptr<BinaryNode<ItemType>>, std::shared_ptr<BinaryNode<ItemType>>> findRightMostNode(std::shared_ptr<BinaryNode<ItemType>> root )
+        // Helper to find the deepest rightmost node (last node in level order) and its parent
+   {
+            if (root == nullptr) return {nullptr, nullptr};
+    
+            if (root->isLeaf()) { // Special case: if root is the only node, it's the deepest and has no parent.
+                return {root, nullptr};
+            }
+    
+            std::queue<std::pair<std::shared_ptr<BinaryNode<ItemType>>, std::shared_ptr<BinaryNode<ItemType>>>> q; // Stores {node, parent}
+            q.push({root, nullptr});
+    
+            std::shared_ptr<BinaryNode<ItemType>> deepestNode = nullptr;
+            std::shared_ptr<BinaryNode<ItemType>> parentOfDeepestNode = nullptr;
+    
+            while (!q.empty()) {
+                std::shared_ptr<BinaryNode<ItemType>> currentNode = q.front().first;
+                std::shared_ptr<BinaryNode<ItemType>> currentParent = q.front().second;
+                q.pop();
+    
+                deepestNode = currentNode; // Keep track of the last visited node, which will be the deepest rightmost
+                parentOfDeepestNode = currentParent;
+    
+                if (currentNode->getLeftChildPtr() != nullptr) {
+                    q.push({currentNode->getLeftChildPtr(), currentNode});
+                }
+                if (currentNode->getRightChildPtr() != nullptr) {
+                    q.push({currentNode->getRightChildPtr(), currentNode});
+                }
+            }
+            return {deepestNode, parentOfDeepestNode};
         }
-        if(node->getRightChildPtr() == nullptr){
-            return node;
-        }
-        return findRightMostNode(node->getRightChildPtr());
-        
-    }
 
+        
+    
     std::shared_ptr<BinaryNode<ItemType>> removeNodeAt(std::shared_ptr<BinaryNode<ItemType>> subTreePtr, const ItemType& target) {
         if (subTreePtr == nullptr) {
             return nullptr;
@@ -602,7 +654,7 @@ public:
     {
     } // end constructor
 
-    BinarySearchTree(const BinaryNodeTree<ItemType>& treePtr)
+    BinarySearchTree(const BinarySearchTree<ItemType>& treePtr)
     {
         rootPtr = copyTree(treePtr.rootPtr);
     }  // end copy constructor
@@ -989,7 +1041,7 @@ TEST_CASE("testing ordered binary search tree with add and removal that maintain
         // Verify independence
         bst.add(20);
         CHECK(bst.contains(20));
-        CHECK_FALSE(bstCopy.contains(20));
+        CHECK_FALSE(bstCopy.contains(20)); // changed signature of the copy constructor so that it gets called.
     }
 
     SUBCASE("assignment operator for BST") {
